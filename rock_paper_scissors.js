@@ -2,7 +2,7 @@ const rock = `rock`;
 const paper = `paper`;
 const scissors = `scissors`;
 
-let options = [rock, paper, scissors];
+const options = [rock, paper, scissors];
 
 function getComputerChoice() {
     let index = Math.floor(Math.random() * 3);
@@ -16,17 +16,17 @@ function getHumanChoice() {
         return null;
     }
 
-    let lowerHumanChoice = humanChoice.toLowerCase();
-    if (lowerHumanChoice === 'q' || lowerHumanChoice === 'quit') {
+     humanChoice = humanChoice.toLowerCase();
+    if (humanChoice === 'q' || humanChoice === 'quit') {
         console.log(`Exit`);
         return 'q';
     }
 
-    if (lowerHumanChoice === 's' || lowerHumanChoice === scissors) {
+    if (humanChoice === 's' || humanChoice === scissors) {
         return scissors;
-    } else if (lowerHumanChoice === 'r' || lowerHumanChoice === rock) {
+    } else if (humanChoice === 'r' || humanChoice === rock) {
         return rock;
-    } else if (lowerHumanChoice === 'p' || lowerHumanChoice === paper) {
+    } else if (humanChoice === 'p' || humanChoice === paper) {
         return paper;
     }
 
@@ -37,51 +37,116 @@ function getHumanChoice() {
 let humanScore = 0;
 let computerScore = 0;
 
-function playRound(humanChoice, computerChoice) {
+function play(humanChoice, computerChoice) {
+    let output = null;
+    let div = document.createElement('div');
+
     if (humanChoice === rock && computerChoice === paper ||
         humanChoice === paper && computerChoice === scissors ||
         humanChoice === scissors && computerChoice === rock) {
-        console.log(`You lose! ${computerChoice} beats ${humanChoice}`);
+        output = document.createTextNode(`You lose! ${computerChoice} beats ${humanChoice}`);
+        div.className = 'lose';
         computerScore++;
-    }
-
-    if (humanChoice === rock && computerChoice === scissors ||
-        humanChoice === paper && computerChoice === rock ||
-        humanChoice === scissors && computerChoice === paper) {
-        console.log(`You win! ${humanChoice} beats ${computerChoice}`);
+    } else {
+        div.className = 'win';
+        output = document.createTextNode(`You win! ${humanChoice} beats ${computerChoice}`);
         humanScore++;
     }
+
+    div.appendChild(output);
+    result.appendChild(div);
+
+    if (humanScore === 5 || computerScore === 5) {
+        nLineBreakAfter(2, result);
+        result.appendChild(document.createTextNode(`Human: ${humanScore} Vs Computer: ${computerScore}`));
+        nLineBreakAfter(1, result);
+        let winner = `The Winner is ${humanScore === 5 ? 'Human' : 'Computer'}`;
+        result.appendChild(document.createTextNode(winner));
+        nLineBreakAfter(1, result);
+        result.appendChild(document.createTextNode(`End of the game.`));
+        nLineBreakAfter(1, result);
+        return;
+    }
 }
 
-function playGame() {
-    let i = 0;
-    while (i < 5) {
-        let humanChoice = getHumanChoice();
-        let computerChoice = getComputerChoice();
+function nLineBreakAfter(n, element) {
+    for (let i = 0; i < n; i++) {
+        element.appendChild(document.createElement('br'));
+    }
+}
 
-        if (humanChoice === 'q') {
-            console.log(`End the game by user!`);
-            break;
-        }
-        
-        if (humanChoice === null) {
-            alert("Wrong choice, please choose another one: r(rock), p(paper), s(scissors), q(quit). ")
-            continue;
-        }
-        
-        if (humanChoice === computerChoice) {
-            console.log("Same, play again!");
-            continue;
-        }
+function playGame(humanChoice) {
+    let computerChoice = getComputerChoice();
 
-        console.log("==========================");
-        console.log(`This is ${i+1} round: `);
-        playRound(humanChoice, computerChoice);
-        i++;
+    if (humanChoice === computerChoice) {
+        console.log("Same, play again!");
+        let div = document.createElement('div');
+        div.appendChild(document.createTextNode("Same, play again!"))
+        div.className = 'same';
+        result.appendChild(div);
+        return;
+    }
+
+    play(humanChoice, computerChoice);
+
+    if (hasWinner()) {
+        changeEnableStatus(true);
     }
     
-    console.log(`Human: ${humanScore} Vs Computer: ${computerScore}`);
-    console.log(`End of the game.`);
 }
 
-playGame();
+function hasWinner() {
+    return humanScore === 5 || computerScore === 5;
+}
+
+let container = document.querySelector('.container');
+let result = document.querySelector('#result');
+let clear = document.querySelector('#clear');
+
+clear.disabled = true;
+
+container.addEventListener('click', (e) => {
+    if (e.target.textContent.toLowerCase() === 'clear') {
+        while (result.firstChild) {
+            result.removeChild(result.firstChild);
+        }
+
+        changeEnableStatus(false);
+        resetScore();
+        return;
+    }
+
+    playGame(e.target.textContent.toLowerCase());
+});
+
+window.addEventListener('keypress', (e) => {
+    let pressedKey = e.key.toLocaleLowerCase();
+    switch (pressedKey) {
+        case 'r':
+            document.querySelector('#rock').click();
+            break;
+        case 's':
+            document.querySelector('#scissors').click();
+            break;
+        case 'p':
+            document.querySelector('#paper').click();
+            break;
+        case 'c':
+            clear.click();
+        default:
+            break;        
+    }
+});
+
+
+function changeEnableStatus(enable) {
+    document.querySelector('#rock').disabled = enable;
+    document.querySelector('#paper').disabled = enable;
+    document.querySelector('#scissors').disabled = enable;
+
+    clear.disabled = !enable;
+}
+
+function resetScore() {
+    humanScore = computerScore = 0;
+}
